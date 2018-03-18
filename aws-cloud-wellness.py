@@ -27,7 +27,11 @@ from datetime import datetime
 import boto3
 
 
-''' TODO: Add suppression argument. '''
+''' TODO:
+    Add suppression argument.
+    Add additional canned Config Rules (S3)
+    Add monitoring control for GuardDuty alerts
+'''
 
 
 # --- Script controls ---
@@ -1274,14 +1278,11 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
-                    filters = client.describe_metric_filters(logGroupName=group
-                    )
+                    filters = client.describe_metric_filters(logGroupName=group)
                     for p in filters['metricFilters']:
-                        patterns = [
-                            "\$\.errorCode\s*=\s*\"?\*UnauthorizedOperation(\"|\)|\s)", "\$\.errorCode\s*=\s*\"?AccessDenied\*(\"|\)|\s)"]
+                        patterns = ["\$\.errorCode\s*=\s*\"?\*UnauthorizedOperation(\"|\)|\s)", "\$\.errorCode\s*=\s*\"?AccessDenied\*(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1317,14 +1318,12 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = [
-                            "\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)", "\$\.additionalEventData\.MFAUsed\s*\!=\s*\"?Yes"]
+                        patterns = ["\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)", "\$\.additionalEventData\.MFAUsed\s*\!=\s*\"?Yes"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1360,14 +1359,12 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.userIdentity\.type\s*=\s*\"?Root", "\$\.userIdentity\.invokedBy\s*NOT\s*EXISTS",
-                                    "\$\.eventType\s*\!=\s*\"?AwsServiceEvent(\"|\)|\s)"]
+                        patterns = ["\$\.userIdentity\.type\s*=\s*\"?Root", "\$\.userIdentity\.invokedBy\s*NOT\s*EXISTS","\$\.eventType\s*\!=\s*\"?AwsServiceEvent(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1403,14 +1400,12 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?DeleteGroupPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutGroupPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreatePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeletePolicy(\"|\)|\s)",
-                                    "\$\.eventName\s*=\s*\"?CreatePolicyVersion(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeletePolicyVersion(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachGroupPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachGroupPolicy(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?DeleteGroupPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutGroupPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreatePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeletePolicy(\"|\)|\s)","\$\.eventName\s*=\s*\"?CreatePolicyVersion(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeletePolicyVersion(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachGroupPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachGroupPolicy(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1446,14 +1441,12 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateTrail(\"|\)|\s)", "\$\.eventName\s*=\s*\"?UpdateTrail(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteTrail(\"|\)|\s)",
-                                    "\$\.eventName\s*=\s*\"?StartLogging(\"|\)|\s)", "\$\.eventName\s*=\s*\"?StopLogging(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateTrail(\"|\)|\s)", "\$\.eventName\s*=\s*\"?UpdateTrail(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteTrail(\"|\)|\s)","\$\.eventName\s*=\s*\"?StartLogging(\"|\)|\s)", "\$\.eventName\s*=\s*\"?StopLogging(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1489,14 +1482,12 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = [
-                            "\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)", "\$\.errorMessage\s*=\s*\"?Failed authentication(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)", "\$\.errorMessage\s*=\s*\"?Failed authentication(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1532,13 +1523,11 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group)
                     for p in filters['metricFilters']:
-                        patterns = [
-                            "\$\.eventSource\s*=\s*\"?kms\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisableKey(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ScheduleKeyDeletion(\"|\)|\s)"]
+                        patterns = ["\$\.eventSource\s*=\s*\"?kms\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisableKey(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ScheduleKeyDeletion(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1574,14 +1563,12 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventSource\s*=\s*\"?s3\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketAcl(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketCors(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketLifecycle(\"|\)|\s)",
-                                    "\$\.eventName\s*=\s*\"?PutBucketReplication(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketCors(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketLifecycle(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketReplication(\"|\)|\s)"]
+                        patterns = ["\$\.eventSource\s*=\s*\"?s3\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketAcl(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketCors(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketLifecycle(\"|\)|\s)","\$\.eventName\s*=\s*\"?PutBucketReplication(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketCors(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketLifecycle(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketReplication(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1617,13 +1604,11 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group)
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventSource\s*=\s*\"?config\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?StopConfigurationRecorder(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteDeliveryChannel(\"|\)|\s)",
-                                    "\$\.eventName\s*=\s*\"?PutDeliveryChannel(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutConfigurationRecorder(\"|\)|\s)"]
+                        patterns = ["\$\.eventSource\s*=\s*\"?config\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?StopConfigurationRecorder(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteDeliveryChannel(\"|\)|\s)","\$\.eventName\s*=\s*\"?PutDeliveryChannel(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutConfigurationRecorder(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1659,14 +1644,12 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?AuthorizeSecurityGroupIngress(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AuthorizeSecurityGroupEgress(\"|\)|\s)", "\$\.eventName\s*=\s*\"?RevokeSecurityGroupIngress(\"|\)|\s)",
-                                    "\$\.eventName\s*=\s*\"?RevokeSecurityGroupEgress(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateSecurityGroup(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteSecurityGroup(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?AuthorizeSecurityGroupIngress(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AuthorizeSecurityGroupEgress(\"|\)|\s)", "\$\.eventName\s*=\s*\"?RevokeSecurityGroupIngress(\"|\)|\s)","\$\.eventName\s*=\s*\"?RevokeSecurityGroupEgress(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateSecurityGroup(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteSecurityGroup(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1702,13 +1685,11 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group)
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateNetworkAcl(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateNetworkAclEntry(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteNetworkAcl(\"|\)|\s)",
-                                    "\$\.eventName\s*=\s*\"?DeleteNetworkAclEntry(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceNetworkAclEntry(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceNetworkAclAssociation(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateNetworkAcl(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateNetworkAclEntry(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteNetworkAcl(\"|\)|\s)","\$\.eventName\s*=\s*\"?DeleteNetworkAclEntry(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceNetworkAclEntry(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceNetworkAclAssociation(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1744,13 +1725,11 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group)
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateCustomerGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteCustomerGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachInternetGateway(\"|\)|\s)",
-                                    "\$\.eventName\s*=\s*\"?CreateInternetGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteInternetGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachInternetGateway(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateCustomerGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteCustomerGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachInternetGateway(\"|\)|\s)","\$\.eventName\s*=\s*\"?CreateInternetGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteInternetGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachInternetGateway(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1786,13 +1765,11 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group)
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateRoute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateRouteTable(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceRoute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceRouteTableAssociation(\"|\)|\s)",
-                                    "\$\.eventName\s*=\s*\"?DeleteRouteTable(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteRoute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisassociateRouteTable(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateRoute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateRouteTable(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceRoute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceRouteTableAssociation(\"|\)|\s)","\$\.eventName\s*=\s*\"?DeleteRouteTable(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteRoute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisassociateRouteTable(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1828,13 +1805,11 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group)
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ModifyVpcAttribute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AcceptVpcPeeringConnection(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateVpcPeeringConnection(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteVpcPeeringConnection(\"|\)|\s)",
-                                    "\$\.eventName\s*=\s*\"?RejectVpcPeeringConnection(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachClassicLinkVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachClassicLinkVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisableVpcClassicLink(\"|\)|\s)", "\$\.eventName\s*=\s*\"?EnableVpcClassicLink(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ModifyVpcAttribute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AcceptVpcPeeringConnection(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateVpcPeeringConnection(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteVpcPeeringConnection(\"|\)|\s)","\$\.eventName\s*=\s*\"?RejectVpcPeeringConnection(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachClassicLinkVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachClassicLinkVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisableVpcClassicLink(\"|\)|\s)", "\$\.eventName\s*=\s*\"?EnableVpcClassicLink(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -1882,18 +1857,16 @@ def control_3_16_ensure_log_metric_changes_to_organizations(cloudtrails):
     control = "3.16"
     description = "Ensure a log metric filter and alarm exist for Organizations changes"
     scored = True
-    failReason = "Ensure a log metric filter and alarm exist for Organizations changes"
+    failReason = "A log metric filter and alarm do not exist for Organizations changes"
     for m, n in cloudtrails.iteritems():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
-                    group = re.search('log-group:(.+?):',
-                                      o['CloudWatchLogsLogGroupArn']).group(1)
+                    group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(logGroupName=group)
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateAccount(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreatePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateOrganizationalUnit(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteOrganization(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteOrganizationalUnit(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeletePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachPolicy(\"|\)|\s)",
-                                    "\$\.eventName\s*=\s*\"?DisableAWSServiceAccess(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisablePolicyType(\"|\)|\s)", "\$\.eventName\s*=\s*\"?MoveAccount(\"|\)|\s)", "\$\.eventName\s*=\s*\"?RemoveAccountFromOrganization(\"|\)|\s)", "\$\.eventName\s*=\s*\"?UpdateOrganizationalUnit(\"|\)|\s)", "\$\.eventName\s*=\s*\"?UpdatePolicy(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateAccount(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreatePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateOrganizationalUnit(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteOrganization(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteOrganizationalUnit(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeletePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachPolicy(\"|\)|\s)","\$\.eventName\s*=\s*\"?DisableAWSServiceAccess(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisablePolicyType(\"|\)|\s)", "\$\.eventName\s*=\s*\"?MoveAccount(\"|\)|\s)", "\$\.eventName\s*=\s*\"?RemoveAccountFromOrganization(\"|\)|\s)", "\$\.eventName\s*=\s*\"?UpdateOrganizationalUnit(\"|\)|\s)", "\$\.eventName\s*=\s*\"?UpdatePolicy(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(MetricName=p['metricTransformations'][0]['metricName'],
@@ -2109,7 +2082,7 @@ def control_4_5_ensure_route_tables_are_least_access(regions):
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'OffendersLinks': offenders_links, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
-def custom_control1_ensure_guardduty_is_enabled(regions):
+def custom_control1_ensure_guardduty_is_enabled(regions, events_rules):
     """Summary
 
     Returns:
@@ -2120,15 +2093,15 @@ def custom_control1_ensure_guardduty_is_enabled(regions):
     offenders = []
     offenders_links = []
     control = "5.1"
-    description = "Ensure GuardDuty is enabled in all regions"
+    description = "Ensure GuardDuty is enabled in all regions and is monitored"
+    failReason = "GuardDuty is not enabled in each region with an enabled CloudWatch Rule"
     scored = False
     for n in regions:
         client = boto3.client('guardduty', region_name=n)
         response = client.list_detectors()
 
         if not response['DetectorIds']:
-            # result = False"GuardDuty is not enabled in each region"
-            offenders.append(str(n) + " : NOT ENABLED")
+            offenders.append(str(n) + " : Not enabled")
             offenders_links.append('https://console.aws.amazon.com/guardduty/home?region={region}'.format(region=n))
             result = False
 
@@ -2136,13 +2109,38 @@ def custom_control1_ensure_guardduty_is_enabled(regions):
             for m in response['DetectorIds']:
                 response = client.get_detector(DetectorId=m)
 
-                if not response['Status'] == 'ENABLED':
+                if response['Status'] != 'ENABLED':
                     result = False
-                    offenders.append(str(n) + " : SUSPENDED")
+                    offenders.append(str(n) + " : Suspended")
                     offenders_links.append('https://console.aws.amazon.com/guardduty/home?region={region}'.format(region=n))
 
-        if not result:
-            failReason = "GuardDuty is not enabled in each region"
+                else:
+
+                    rule_exists = False
+
+                    # If GuardDuty is enabled, then determine whether notifictions are enabled.
+                    for rule in events_rules[n]:
+
+                        if 'EventPattern' in rule and 'detail' in json.loads(rule['EventPattern']):
+                            detail = json.loads(rule['EventPattern'])['detail']
+
+                            if 'eventSource' in detail and 'aws.guardduty' in detail['eventSource']:
+
+                                rule_exists = True
+
+                                if rule['State'] != 'ENABLED':
+
+                                    result = False
+                                    offenders.append(str(n) + " : Disabled rule")
+                                    offenders_links.append('https://console.aws.amazon.com/cloudwatch/home?region={region}#rules:name={rule_name}'.format(
+                                        region=n,
+                                        rule_name=rule['Name'])
+                                    )
+
+                    if not rule_exists:
+                        result = False
+                        offenders.append(str(n) + " : No GuardDuty CloudWatch Rules exist for for this region")
+                        offenders_links.append('https://console.aws.amazon.com/cloudwatch/home?region={region}'.format(region=n))
 
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'OffendersLinks': offenders_links, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
@@ -2194,7 +2192,7 @@ def custom_control1_ensure_macie_is_enabled(regions):
         response = boto3.client('events').list_rules()['Rules']
 
         for m in response:
- 
+
             if 'EventPattern' in m and "aws.macie" in m['EventPattern']:
                 result = True
                 pass
@@ -2302,6 +2300,24 @@ def get_cloudtrails(regions):
             trails[n] = temp
     return trails
 
+def get_events_rules(regions):
+    """Summary
+
+    Returns:
+        TYPE: Description
+    """
+    events_rules = dict()
+    for n in regions:
+        # response = boto3.client('events').list_rules()['Rules']
+        client = boto3.client('events', region_name=n)
+        response = client.list_rules()
+        temp = []
+        for m in response['Rules']:
+            temp.append(m)
+        if len(temp) > 0:
+            events_rules[n] = temp
+    return events_rules
+
 
 def find_in_string(pattern, target):
     """Summary
@@ -2407,9 +2423,9 @@ def json2html(controlResult, account):
         </div>
     </div>
     '''.format(
-            account, 
-            time.strftime("%c"), 
-            AWS_CLOUD_WELLNESS_STANDARD_VERSION, 
+            account,
+            time.strftime("%c"),
+            AWS_CLOUD_WELLNESS_STANDARD_VERSION,
             shortReport
         )
 
@@ -2694,6 +2710,7 @@ def lambda_handler(event, context):
     cred_report = get_cred_report()
     password_policy = get_account_password_policy()
     cloud_trails = get_cloudtrails(region_list)
+    events_rules = get_events_rules(region_list)
     accountNumber = get_account_number()
 
     # Run individual controls.
@@ -2765,7 +2782,7 @@ def lambda_handler(event, context):
 
     print("Evaluating custom controls...")
     control_custom = []
-    control_custom.append(custom_control1_ensure_guardduty_is_enabled(region_list))
+    control_custom.append(custom_control1_ensure_guardduty_is_enabled(region_list, events_rules))
     control_custom.append(custom_control1_ensure_inspector_is_enabled(region_list))
     control_custom.append(custom_control1_ensure_macie_is_enabled(region_list))
 
